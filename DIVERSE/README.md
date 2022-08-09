@@ -9,7 +9,7 @@ Each subfolder in the ``/data`` folder corresponds to a reasoning benchmark. You
 Generally, these subfolders consist of ``train.jsonl`` and ``test.jsonl`` files.
 Each line of these files shares the same format:
 
-```json
+```javascript
 {
     // context: the prompt sequence we provide to the language model.
     // {Qi}/{Ei}/{Ai} represents the question/chain-of-thought/answer of the i-th exemplar.
