@@ -19,6 +19,14 @@ class PostProcessor:
         predictions = Tools.load_jsonl(predict_path)
         for pre in predictions:
             task = database[pre['prompt']]
+            if not pre['samples']:
+                result.append({
+                    'task_id': task['task_id'],
+                    'prompt': pre['prompt'],
+                    'test': task['test'],
+                    'entry_point': task['entry_point'],
+                    'completion': 'empty solution here, execution will fail'
+                })
             for sample in pre['samples']:
                 processed_code = PostProcessor.solution_extract(sample)
                 result.append({
