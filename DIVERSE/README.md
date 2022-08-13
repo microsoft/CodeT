@@ -128,15 +128,11 @@ Key logged metrics include:
 If our work is useful for you, please consider citing our paper:
 
 ```bibtex
-@misc{https://doi.org/10.48550/arxiv.2207.10397,
-  doi = {10.48550/ARXIV.2207.10397},
-  url = {https://arxiv.org/abs/2207.10397},
-  author = {Chen, Bei and Zhang, Fengji and Nguyen, Anh and Zan, Daoguang and Lin, Zeqi and Lou, Jian-Guang and Chen, Weizhu},
-  keywords = {Computation and Language (cs.CL), Artificial Intelligence (cs.AI), Programming Languages (cs.PL), Software Engineering (cs.SE), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {CodeT: Code Generation with Generated Tests},
-  publisher = {arXiv},
-  year = {2022},
-  copyright = {arXiv.org perpetual, non-exclusive license}
+@article{li2022advance,
+  title={On the Advance of Making Language Models Better Reasoners},
+  author={Li, Yifei and Lin, Zeqi and Zhang, Shizhuo and Fu, Qiang and Chen, Bei and Lou, Jian-Guang and Chen, Weizhu},
+  journal={arXiv preprint arXiv:2206.02336},
+  year={2022}
 }
 ```
 
