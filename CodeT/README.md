@@ -34,8 +34,10 @@ This project contains the basic components of CodeT and a main entry point, here
     |-- generated_data # contains the output data by pre-trained language models
         |-- hmeval_incoder6B_temp0.8_topp0.95_num100_max300_test_case.jsonl
         |-- hmeval_incoder6B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- hmeval_davinci002_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- hmeval_davinci002_temp0.8_topp0.95_num100_max300_test_case.jsonl
         |-- hmeval_codegen16B_temp0.8_topp0.95_num100_max300_test_case.jsonl
-        |-- hmeval_codegen16B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- hmeval_codegen16B_temp0.8_topp0.95_num100_max300_code_solution.jsonl 
 ```
 
 # Quickstart
