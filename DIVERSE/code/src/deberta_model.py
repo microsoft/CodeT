@@ -1408,6 +1408,7 @@ class DebertaV2ForTokenClassification(DebertaV2PreTrainedModel):
         sequence_output = self.dropout(sequence_output)
         logits = self.classifier(sequence_output)
 
+        # original loss
         loss = None
         if labels is not None:
             # pdb.set_trace()
@@ -1433,6 +1434,37 @@ class DebertaV2ForTokenClassification(DebertaV2PreTrainedModel):
                 loss = loss_fct(active_logits, active_labels)
             else:
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+        
+        # pdb.set_trace()
+        
+        # for calculating KL
+        if self.config.task_specific_params["loss_type"] == 'kl':
+            size_in_batch = input_ids.shape[0]
+            seq_len = input_ids.shape[1]
+            attention_output = outputs['attentions'][self.config.task_specific_params["attention_layer"]]  # by default -1
+
+            # Find attention weights for batch
+            desired_att_weights_0s_1s = self.batch_att_weights(
+                    size_in_batch,
+                    seq_len,
+                    input_ids,
+                    self.config.task_specific_params["weights_all_sentences"],
+                    attention_mask)
+            
+            attention_loss = self.calculate_attention_loss_original(
+                                desired_att_weights_0s_1s, 
+                                attention_output, 
+                                size_in_batch, 
+                                seq_len, 
+                                attention_mask)
+            
+            # Find combined loss
+            combined_loss = self.config.task_specific_params["lambda_val"] * torch.true_divide(
+                    attention_loss,
+                    float(self.config.task_specific_params["attention_heads"])) + loss
+
+            combined_loss = combined_loss.squeeze(0)
+            loss = combined_loss
 
         if not return_dict:
             output = (logits,) + outputs[1:]
@@ -1445,7 +1477,133 @@ class DebertaV2ForTokenClassification(DebertaV2PreTrainedModel):
             attentions=outputs.attentions,
         )
 
+    
+    def batch_att_weights(
+            self,
+            size_in_batch: int,
+            seq_len: int,
+            token_ids: torch.tensor,
+            weights_all_sentences: dict,
+            attention_mask: torch.tensor) -> torch.tensor:
 
+        """
+        Create a tensor of desired attention weights for the batch
+
+        Args:
+            size_in_batch: number of observations in the minibatch
+            seq_len: token length for each example (including padding)
+            token_ids: input_ids for minibatch
+            weights_all_sentences: each input id (minus padding) has a
+                ... corresponding list of 1s and 0s as desired attention
+                ... with the list matching the input id length (no padding)
+            attention_mask: attention mask for the batch
+
+        Returns:
+            desired_att_weights_0s_1s: desired attention values for the batch
+        """
+        
+        desired_att_weights_0s_1s = torch.zeros(size_in_batch, seq_len)
+        
+        # Creating tensor of desired attention weights
+        for row_no in range(size_in_batch):
+
+            input_ids = list(np.array(token_ids[row_no].cpu()))
+            input_ids = [input_ids[idx] for idx in range(len(input_ids)) \
+                    if attention_mask[row_no, idx] != 0]
+
+            token_len = len(weights_all_sentences[str(input_ids)])
+
+            weights_all_sents = weights_all_sentences[str(input_ids)]
+
+            desired_att_weights_0s_1s[row_no,:token_len] = \
+                    torch.tensor(weights_all_sents)
+        
+        # Note: desired_att_weights_0s_1s may also contain 0.5 values on the
+        # .. 'combined' attention weights setting
+        # There may also be a -1 in the first position, indicating not to
+        # .. supervise the model using this explanation
+
+        # Tensor to GPU
+        desired_att_weights_0s_1s = desired_att_weights_0s_1s.to(self.device)
+
+        return desired_att_weights_0s_1s
+
+    
+    def calculate_attention_loss_original(
+            self, 
+            desired_att_weights: torch.tensor,
+            attention_output: torch.tensor, 
+            size_in_batch: int, 
+            seq_len: int, 
+            att_mask: torch.tensor) -> torch.tensor:
+        """
+        We find the difference between the current and the desired attention
+
+        Args:
+            desired_att_weights: desired attention values for the batch (0s,1s)
+            attention_output: attention output for layer being supervised
+            size_in_batch: observations in minibatch
+            seq_len: sequence length of input_ids (including padding)
+            att_mask: attention masks for minibatch
+
+        Returns:
+            all_attention_loss: attention loss for the minibatch
+
+        """
+        # Create loss tensor
+        all_attention_loss = torch.tensor(0).to(self.device)
+
+        # First we calculate the attention weight that we need
+        for i_val in range(size_in_batch):
+            
+            attention_mask = att_mask[i_val]
+            # We scale the desired weight tensor to 1
+            weight_mult = torch.sum(desired_att_weights[i_val, :])
+        
+            # We only scale the weights if the first value is not -1
+            if desired_att_weights[i_val,:][0] >= 0:
+                
+                desired_att_weights[i_val, :] = \
+                        desired_att_weights[i_val, :] / weight_mult
+                
+                assert torch.allclose(
+                    torch.sum(desired_att_weights[i_val, :]), 
+                    torch.tensor([1.0]).to(self.device))
+
+            if self.config.task_specific_params['loss_type'] == 'kl':
+                # average all the heads of [CLS] token
+                single_head_CLS_att = torch.mean(
+                        attention_output[i_val, :, 0, :],
+                        0)
+
+                epsilon = torch.tensor([0.0001]).to(self.device)
+                
+                a = desired_att_weights[i_val, :]
+                a = torch.where(a == 0, epsilon, a)
+                a = torch.true_divide(a,torch.sum(a))
+                b = single_head_CLS_att
+                b = torch.true_divide(b, torch.sum(b))
+
+                # Find the KL divergence:
+                kld = torch.tensor([0]).to(self.device)
+                
+                if 0 in attention_mask:
+                    max_len = (attention_mask == 0).int().nonzero().min()
+                else:
+                    max_len = attention_mask.shape[0]
+                    
+                for i in range(max_len):
+                    if a[i] != torch.tensor([0.0]).to(self.device):
+                        kld = kld + (-1)* a[i] * torch.log(b[i]/a[i]).to(
+                                self.device)
+                all_attention_loss = all_attention_loss + kld
+
+        # This counteracts dividing by the number of attention heads
+        if self.config.task_specific_params['loss_type'] == 'kl':
+            all_attention_loss = all_attention_loss \
+                    * float(self.config.task_specific_params['attention_heads'])
+
+        return all_attention_loss
 
 
 @add_start_docstrings(

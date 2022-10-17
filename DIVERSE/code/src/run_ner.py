@@ -20,7 +20,6 @@ import os
 from dataclasses import dataclass, field
 from importlib import import_module
 from typing import Dict, List, Optional, Tuple
-import pdb
 import numpy as np
 from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch import nn
@@ -28,7 +27,7 @@ import scipy
 from verifier_metrics import VerifierMetrics
 import utils_io
 import shutil
-
+import pickle
 import transformers
 from transformers import (
     AutoConfig,
@@ -43,10 +42,12 @@ from transformers import (
 )
 from transformers.trainer_utils import is_main_process
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
+import datasets
 from deberta_model import DebertaV2ForTokenClassification
 import pdb
 
 logger = logging.getLogger(__name__)
+os.environ["WANDB_DISABLED"] = "true"
 
 
 @dataclass
@@ -112,7 +113,32 @@ class DataTrainingArguments:
     alpha: Optional[float] = field(
         default=0.0, metadata={"help": "help"}
     )
-
+    sentences_attention_weights_file: Optional[str] = field(
+        default=None,
+        metadata={"help": "Path to a file containing all labels. If not specified, CoNLL-2003 labels are used."},
+    )
+    # Arguments concerning which attention heads we are supervising:
+    attention_layer: Optional[int] = field(
+        default=-1,  # the last layer
+        metadata={"help": "Self attention layer that we are supervising"},
+    )
+    attention_heads: Optional[int] = field(
+        default=12,  # the last layer
+        metadata={"help": "The number of heads to apply attention supervision to"},
+    )
+    attention_head_numbers: Optional[str] = field(
+        default='default',  # the last layer
+        metadata={"help": "Which attention heads to supervise. Provide as 1,2,3,4 etc.\
+        The number specified must match the attention_heads parameter. \
+        By default the first n attention heads will be supervised \
+        (n from attention_heads parameter)"},
+    )
+    loss_type: Optional[str] = field(
+        default="kl", metadata={"help": "the weight of KL loss"}
+    )
+    lambda_val: Optional[float] = field(
+        default=1.0, metadata={"help": "the weight of KL loss"}
+    )
 
 
 def main():
@@ -121,12 +147,14 @@ def main():
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    
 
     if (
         os.path.exists(training_args.output_dir)
@@ -221,6 +249,20 @@ def main():
         config=config,
         cache_dir=model_args.cache_dir,
     )
+
+    # code change about KL loss
+    if data_args.loss_type == 'kl':
+        with open(data_args.sentences_attention_weights_file, "rb") as fp:
+            weights_all_sentences = pickle.load(fp)
+        config.task_specific_params["weights_all_sentences"] = weights_all_sentences
+        config.task_specific_params["attention_layer"] = data_args.attention_layer
+        config.task_specific_params["attention_heads"] = data_args.attention_heads
+        config.task_specific_params["attention_head_numbers"] = data_args.attention_head_numbers
+        config.task_specific_params["lambda_val"] = data_args.lambda_val
+        config.task_specific_params["loss_type"] = data_args.loss_type
+        model.config.output_attentions = True
+        model.config.output_hidden_states = True
+    # code change end
     
     # data_dir = data_args.train_data.replace("train.txt", "")  # for debug use
     data_dir = os.path.join(training_args.output_dir, "data/")
