@@ -27,17 +27,31 @@ This project contains the basic components of CodeT and a main entry point, here
     |-- io_utils.py # simple utils for file reading/writing
 |-- data
     |-- dataset # contains the input data for code solution and test case generation
-        |-- hmeval_for_code_generation.jsonl
-        |-- hmeval_for_test_case_generation.jsonl
-        |-- mbpp_sanitized_for_code_generation.jsonl
-        |-- mbpp_sanitized_for_test_case_generation.jsonl
+        |-- HumanEval_for_code_generation.jsonl
+        |-- HumanEval_for_test_case_generation.jsonl
+        |-- MBPP_sanitized_for_code_generation.jsonl
+        |-- MBPP_sanitized_for_test_case_generation.jsonl
+        |-- APPS_zeroshot_for_code_generation.zip
+        |-- APPS_zeroshot_for_test_case_generation.jsonl
+        |-- CodeContests_zeroshot_for_code_generation.jsonl
+        |-- CodeContests_zeroshot_for_test_case_generation.jsonl
     |-- generated_data # contains the output data by pre-trained language models
-        |-- hmeval_incoder6B_temp0.8_topp0.95_num100_max300_test_case.jsonl
-        |-- hmeval_incoder6B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
-        |-- hmeval_davinci002_temp0.8_topp0.95_num100_max300_code_solution.jsonl
-        |-- hmeval_davinci002_temp0.8_topp0.95_num100_max300_test_case.jsonl
-        |-- hmeval_codegen16B_temp0.8_topp0.95_num100_max300_test_case.jsonl
-        |-- hmeval_codegen16B_temp0.8_topp0.95_num100_max300_code_solution.jsonl 
+        |-- HumanEval_codegen16B_temp0.8_topp0.95_num100_max300_code_solution.jsonl 
+        |-- HumanEval_codegen16B_temp0.8_topp0.95_num100_max300_test_case.jsonl
+        |-- HumanEval_davinci002_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- HumanEval_davinci002_temp0.8_topp0.95_num100_max300_test_case.jsonl
+        |-- HumanEval_incoder6B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- HumanEval_incoder6B_temp0.8_topp0.95_num100_max300_test_case.jsonl     
+        |-- MBPP_codegen16B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- MBPP_codegen16B_temp0.8_topp0.95_num100_max300_test_case.jsonl
+        |-- MBPP_davinci002_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- MBPP_davinci002_temp0.8_topp0.95_num100_max300_test_case.jsonl
+        |-- MBPP_incoder6B_temp0.8_topp0.95_num100_max300_code_solution.jsonl
+        |-- MBPP_incoder6B_temp0.8_topp0.95_num100_max300_test_case.jsonl
+        |-- APPS_zeroshot_davinci002_temp0.8_topp0.95_num50_max300_code_solution.zip
+        |-- APPS_zeroshot_davinci002_temp0.8_topp0.95_num50_max300_test_case.zip
+        |-- CodeContests_zeroshot_davinci002_temp0.8_topp0.95_num50_max300_test_case.jsonl
+        |-- CodeContests_zeroshot_davinci002_temp0.8_topp0.95_num1000_max300_code_solution.zip
 ```
 
 # Quickstart
