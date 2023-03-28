@@ -2,7 +2,7 @@
 
 ### Download the Code-Davinci-002 Inference Results
 
-[Download Link](https://dkibdm.blob.core.windows.net/llmpublic/clutrr_code_davinci_002.zip)
+[Download Link](https://bdmbabel.blob.core.windows.net/public/clutrr.zip)
 
 ### Original Dataset
 
