@@ -87,7 +87,7 @@ $ pip install -r requirements.txt
 ```json
 {
   "prompt": "...the retrieved code snippets and unfinished code...",
-  "choices": [{"text": "...generated completion without repeating the input prompt..."},],
+  "choices": [{"text": "...generated completion without repeating the input prompt..."}],
   "metadata": {}
 }
 ```
