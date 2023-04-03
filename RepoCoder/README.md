@@ -77,8 +77,8 @@ $ pip install -r requirements.txt
     "task_id": "repo_name/idx",
     "ground_truth": "ground truth completion",
     "fpath_tuple": ["path", "to", "target file"],
-    "context_start_lineno": 0, # the line number of the first line of the prompt
-    "line_no": 10, # the line number of the first line to complete
+    "context_start_lineno": 0,
+    "line_no": 10,
   }
 }
 ```
@@ -86,9 +86,9 @@ $ pip install -r requirements.txt
 2. Then we can call the model to generate completions and organize the results in the following format:
 ```json
 {
-  "prompt": "...", # same prompt as the input
-  "choices": [{"text": "...generated completion without repeating the input prompt..."}, ...],
-  "metadata": {...} # same json object as the input metadata
+  "prompt": "...the retrieved code snippets and unfinished code...",
+  "choices": [{"text": "...generated completion without repeating the input prompt..."},],
+  "metadata": {}
 }
 ```
 
