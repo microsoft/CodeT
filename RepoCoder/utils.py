@@ -20,11 +20,11 @@ class CONSTANTS:
     rgrg = 'r-g-r-g' # RepoCoder, two-stage retrieval and generation
 
 class FilePathBuilder:
-    api_completion_benchmark = 'datasets/random-api-completion.test.jsonl'
-    random_line_completion_benchmark = 'datasets/random-line-completion.test.jsonl'
+    api_completion_benchmark = 'datasets/api_level_completion_2k_context_codex.test.jsonl'
+    random_line_completion_benchmark = 'datasets/line_level_completion_2k_context_codex.test.jsonl'
     # short version for codegen
-    short_api_completion_benchmark = 'datasets/random-api-completion-short-version.test.jsonl'
-    short_random_line_completion_benchmark = 'datasets/random-line-completion-short-version.test.jsonl'
+    short_api_completion_benchmark = 'datasets/api_level_completion_1k_context_codegen.test.jsonl'
+    short_random_line_completion_benchmark = 'datasets/line_level_completion_1k_context_codegen.test.jsonl'
     repo_base_dir = 'repositories/line_and_api_level'
 
     @staticmethod
