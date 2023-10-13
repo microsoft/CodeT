@@ -138,7 +138,7 @@ class GroundTruthWindowMaker:
                 }
             })
         print(f'build {len(code_windows)} ground truth windows for {self.repo} with window size {self.window_size}')
-        output_path = FilePathBuilder.search_first_window_path(self.benchmark, CONSTANTS.rg, self.repo, self.window_size)
+        output_path = FilePathBuilder.search_first_window_path(self.benchmark, CONSTANTS.gt, self.repo, self.window_size)
         Tools.dump_pickle(code_windows, output_path)
 
 class PredictionWindowMaker:
