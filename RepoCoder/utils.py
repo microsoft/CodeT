@@ -116,16 +116,19 @@ class Tools:
     
     @staticmethod
     def dump_pickle(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'wb') as f:
             pickle.dump(obj, f)
     
     @staticmethod
     def dump_json(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             json.dump(obj, f)
 
     @staticmethod
     def dump_jsonl(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             for item in obj:
                 f.write(json.dumps(item) + '\n')
