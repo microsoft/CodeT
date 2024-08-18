@@ -69,10 +69,10 @@ if __name__ == '__main__':
     make_repo_window(repos, window_sizes, slice_sizes)
     
     # build prompt for the RG1 and oracle methods, after building the prompts, you should run inferece and then evaluate the results
-    run_RG1_and_oracle_method(CONSTANTS.api_benchmark, repos, window_sizes, slice_sizes)
+    run_RG1_and_oracle_method(CONSTANTS.short_api_benchmark, repos, window_sizes, slice_sizes)
 
     '''
     before building prompt for the RepoCoder method, you need to run inference on the prompts of RG1 method
     '''
     # prediction_path = 'predictions/rg-one-gram-ws-20-ss-2_samples.0.jsonl'
-    # run_RepoCoder_method(CONSTANTS.api_benchmark, repos, window_sizes, slice_sizes, prediction_path)
+    # run_RepoCoder_method(CONSTANTS.short_api_benchmark, repos, window_sizes, slice_sizes, prediction_path)
