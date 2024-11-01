@@ -20,11 +20,11 @@ class CONSTANTS:
     rgrg = 'r-g-r-g' # RepoCoder, two-stage retrieval and generation
 
 class FilePathBuilder:
-    api_completion_benchmark = 'datasets/random-api-completion.test.jsonl'
-    random_line_completion_benchmark = 'datasets/random-line-completion.test.jsonl'
+    api_completion_benchmark = 'datasets/api_level_completion_2k_context_codex.test.jsonl'
+    random_line_completion_benchmark = 'datasets/line_level_completion_2k_context_codex.test.jsonl'
     # short version for codegen
-    short_api_completion_benchmark = 'datasets/random-api-completion-short-version.test.jsonl'
-    short_random_line_completion_benchmark = 'datasets/random-line-completion-short-version.test.jsonl'
+    short_api_completion_benchmark = 'datasets/api_level_completion_1k_context_codegen.test.jsonl'
+    short_random_line_completion_benchmark = 'datasets/line_level_completion_1k_context_codegen.test.jsonl'
     repo_base_dir = 'repositories/line_and_api_level'
 
     @staticmethod
@@ -116,16 +116,19 @@ class Tools:
     
     @staticmethod
     def dump_pickle(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'wb') as f:
             pickle.dump(obj, f)
     
     @staticmethod
     def dump_json(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             json.dump(obj, f)
 
     @staticmethod
     def dump_jsonl(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             for item in obj:
                 f.write(json.dumps(item) + '\n')

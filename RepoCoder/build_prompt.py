@@ -39,31 +39,37 @@ class PromptBuilder:
         token_len = len(tokenized_block)
         return block_str, token_len
 
-    def _make_an_extended_block(self, retrieved_context):
+    def _make_an_extended_block(self, task_metadata, retrieved_context):
         content, sim_score = retrieved_context
         metadata = content['metadata']
-        # put the file path in the comment
-        assert metadata[0]['fpath_tuple'][0] == metadata[0]['repo']
-        f_paths = ['/'.join(x['fpath_tuple'][1:]) for x in metadata]
-        f_paths_str = '\n'.join([f'# {f_path}' for f_path in f_paths])
-        f_path_comment = f'# the below code fragment can be found in:'
-        # put code lines in the comment
-        original_code = Tools.read_code(os.path.join(FilePathBuilder.repo_base_dir, *metadata[0]['fpath_tuple']))
-        code_lines = original_code.splitlines()
-        end_line_no = metadata[0]['end_line_no']
-        window_size = metadata[0]['window_size']
-        slice_size = metadata[0]['slice_size']
-        new_end_line_no = min(end_line_no + window_size // slice_size, len(code_lines))
-        new_start_line_no = max(0, new_end_line_no - window_size)
-        content_lines = code_lines[new_start_line_no:new_end_line_no]
-        content_lines_comment = [f'# {line}' for line in content_lines]
-        # aggregate the comment and the code lines
-        block_str = '\n'.join([f_path_comment, f_paths_str, self.seperator] + content_lines_comment + [self.seperator]) + '\n'
-        tokenized_block = self.tokenizer.tokenize(block_str)
-        token_len = len(tokenized_block)
-        return block_str, token_len
+        duplicate_num = len(metadata) # for those share the exact same code fragment from different files
+        for i in range(duplicate_num):
+            # put the file path in the comment
+            assert metadata[i]['fpath_tuple'][0] == metadata[i]['repo']
+            f_paths = ['/'.join(x['fpath_tuple'][1:]) for x in metadata]
+            f_paths_str = '\n'.join([f'# {f_path}' for f_path in f_paths])
+            f_path_comment = f'# the below code fragment can be found in:'
+            # put code lines in the comment
+            original_code = Tools.read_code(os.path.join(FilePathBuilder.repo_base_dir, *metadata[i]['fpath_tuple']))
+            code_lines = original_code.splitlines()
+            end_line_no = metadata[i]['end_line_no']
+            window_size = metadata[i]['window_size']
+            slice_size = metadata[i]['slice_size']
+            new_end_line_no = min(end_line_no + window_size // slice_size, len(code_lines))
+            new_start_line_no = max(0, new_end_line_no - window_size)
+            if metadata[i]['fpath_tuple'] == tuple(task_metadata['fpath_tuple']) and new_end_line_no >= task_metadata['line_no']:
+                continue
+            content_lines = code_lines[new_start_line_no:new_end_line_no]
+            content_lines_comment = [f'# {line}' for line in content_lines]
+            # aggregate the comment and the code lines
+            block_str = '\n'.join([f_path_comment, f_paths_str, self.seperator] + content_lines_comment + [self.seperator]) + '\n'
+            tokenized_block = self.tokenizer.tokenize(block_str)
+            token_len = len(tokenized_block)
+            return block_str, token_len
+        else:
+            return '', 0
 
-    def _build_prompt(self, mode, prompt, top_k_context):
+    def _build_prompt(self, mode, prompt, task_metadata, top_k_context):
         prepend_context = "# Here are some relevant code fragments from other files of the repo:\n"
         prepend_context += self.seperator + '\n'
         current_token_length = 20  # the length of the head_prompt, same for codex and codegen tokenizer
@@ -73,7 +79,10 @@ class PromptBuilder:
         for retrieved_context in top_k_context[::-1]:
             if len(chosen_context) >= self.max_examples:
                 break
-            block_str, token_len = make_block_func(retrieved_context)
+            kwargs = {'retrieved_context': retrieved_context}
+            if mode == CONSTANTS.rg:
+                kwargs['task_metadata'] = task_metadata
+            block_str, token_len = make_block_func(**kwargs)
             if current_token_length + token_len < self.max_retrieval_length:
                 prepend_blocks.insert(0, block_str) 
                 current_token_length += token_len
@@ -90,7 +99,7 @@ class PromptBuilder:
             task = self.tasks_by_task_id[task_id]
             old_prompt = task['prompt']
             top_k_context = query_line['top_k_context']
-            new_prompt, chosen_context = self._build_prompt(mode, old_prompt, top_k_context)
+            new_prompt, chosen_context = self._build_prompt(mode, old_prompt, task['metadata'], top_k_context)
             new_prompt_line = {
                 'prompt': new_prompt,
                 'metadata': task['metadata'],

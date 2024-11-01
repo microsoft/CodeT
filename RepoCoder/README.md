@@ -22,6 +22,7 @@ This project contains the basic components of RepoCoder. Here is an overview:
 |-- build_prompt.py # build the prompt with the unfinished code and the retrieved code snippets
 |-- run_pipeline.py # run the code completion pipeline
 |-- compute_score.py # evaluate the performance of the code completion
+|-- codegen_inference.py # an example script for using CodeGen to generate code completions
 |-- utils.py # utility functions
 |-- datasets/datasets.zip # the input data for the code completion task
     |-- function_level_completion_4k_context_codex.test.jsonl
